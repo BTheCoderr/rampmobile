@@ -3,7 +3,7 @@
     "name": "RAMP Mobile Concept",
     "slug": "ramp-mobile-concept",
     "scheme": "rampmobileconcept",
-    "version": "0.1.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F4F8F8",
@@ -17,7 +17,7 @@
     },
     "extra": {
       "conceptOnly": true,
-      "dataStatus": "Public directory sample, not live or complete"
+      "dataStatus": "Offline public samples by default; approved RAMP endpoint opt-in only"
     }
   }
 }
