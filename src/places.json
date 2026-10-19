@@ -1,0 +1,101 @@
+[
+  {
+    "id": "lincoln-blue-store",
+    "name": "Lincoln Your Blue Store",
+    "type": "Healthcare",
+    "city": "Lincoln",
+    "state": "RI",
+    "address": "622 George Washington Highway, Lincoln, RI 02865",
+    "certified": "August 2026",
+    "accessibility": "Accessible parking, automatic entrances, check-in, clear signage, room for mobility devices and a wheelchair scale. The website notes that restroom maneuvering space may be inadequate for some power wheelchair users.",
+    "source": "https://rampapproved.com/accessible-locations/"
+  },
+  {
+    "id": "the-alcove",
+    "name": "The Alcove",
+    "type": "Community",
+    "city": "Providence",
+    "state": "RI",
+    "address": "189 Broadway, Providence, RI 02903",
+    "certified": "August 2026",
+    "accessibility": "Main floor accessible, with a second-floor elevator and an accessible second-floor bathroom. The listing notes bathroom doors open inward and an emergency evacuation plan is in development.",
+    "source": "https://rampapproved.com/accessible-locations/"
+  },
+  {
+    "id": "aging-well",
+    "name": "Aging Well Inc.",
+    "type": "Community",
+    "city": "Woonsocket",
+    "state": "RI",
+    "address": "84 Social St, Woonsocket, RI 02895",
+    "certified": "June 2026",
+    "accessibility": "Accessible rooms and garden, with wave-operated bathroom doors and a basement elevator. The listing notes an alternate route is currently needed for some outdoor access.",
+    "source": "https://rampapproved.com/accessible-locations/"
+  },
+  {
+    "id": "save-the-bay",
+    "name": "Save The Bay Center",
+    "type": "Nature",
+    "city": "Providence",
+    "state": "RI",
+    "address": "100 Save The Bay Drive, Providence, RI 02905",
+    "certified": "June 2026",
+    "accessibility": "Accessible parking and entrance; the center's rooms and patio are wheelchair accessible. Restrooms may be a tight fit for some users.",
+    "source": "https://rampapproved.com/accessible-locations/"
+  },
+  {
+    "id": "aquarium",
+    "name": "Save The Bay's Hamilton Family Aquarium",
+    "type": "Nature",
+    "city": "Newport",
+    "state": "RI",
+    "address": "23 America's Cup Ave, Newport, RI 02840",
+    "certified": "June 2026",
+    "accessibility": "Push-button entry, wheelchair-accessible exhibits, nearby accessible parking and a RIPTA bus depot. Restrooms may be tighter than usual.",
+    "source": "https://rampapproved.com/accessible-locations/"
+  },
+  {
+    "id": "ep-senior-center",
+    "name": "East Providence Senior Center",
+    "type": "Community",
+    "city": "East Providence",
+    "state": "RI",
+    "address": "610 Waterman Ave, East Providence, RI 02914",
+    "certified": "February 2026",
+    "accessibility": "Push-button accessible doors and supportive activity spaces. The listing notes parking-area construction and some tight restrooms.",
+    "source": "https://rampapproved.com/accessible-locations/"
+  },
+  {
+    "id": "ep-city-hall",
+    "name": "East Providence City Hall",
+    "type": "Government",
+    "city": "East Providence",
+    "state": "RI",
+    "address": "145 Taunton Ave, East Providence, RI 02914",
+    "certified": "February 2026",
+    "accessibility": "Two accessible spaces near the entrance and additional street parking. The website notes that some restrooms are tight and remodeling is planned.",
+    "source": "https://rampapproved.com/accessible-locations/"
+  },
+  {
+    "id": "coast-guard-house",
+    "name": "The Coast Guard House",
+    "type": "Dining",
+    "city": "Narragansett",
+    "state": "RI",
+    "address": "40 Ocean Road, Narragansett, RI 02882",
+    "certified": "February 2026",
+    "accessibility": "Accessible parking, first-floor entry and seasonal igloo ramps, elevator to the second floor, and accessible restrooms. The listing includes details of maneuvering space in the elevator.",
+    "source": "https://rampapproved.com/accessible-locations/"
+  },
+  {
+    "id": "bcbsri",
+    "name": "Blue Cross Blue Shield of Rhode Island",
+    "type": "Healthcare",
+    "city": "Providence",
+    "state": "RI",
+    "address": "500 Exchange St, Providence, RI 02903",
+    "certified": "November 2025",
+    "accessibility": "Accessible parking, automatic doors, signage, restrooms and locker rooms, plus adjustable desks and clear circulation paths.",
+    "source": "https://rampapproved.com/accessible-locations/"
+  }
+]
