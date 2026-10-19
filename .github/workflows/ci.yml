@@ -24,3 +24,9 @@ jobs:
         run: npm run test:unit
       - name: TypeScript check
         run: npm run typecheck
+      - name: Expo dependency compatibility
+        run: npm run check:expo-compatibility
+      - name: iOS JavaScript bundle smoke test
+        run: npm run check:bundle:ios
+      - name: Android JavaScript bundle smoke test
+        run: npm run check:bundle:android
