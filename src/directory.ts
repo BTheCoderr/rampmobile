@@ -94,3 +94,16 @@ export function safeStoredFavoriteIds(input: unknown): string[] {
   return [...new Set(input.filter((id): id is string =>
     typeof id === 'string' && /^[a-zA-Z0-9_-]{1,100}$/.test(id)))].slice(0, 500);
 }
+
+/** Keep checklist preferences while offline even if the venue is not in the sample. */
+export function safeStoredVisitPlans(input: unknown): VisitPlans {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+  const questionIds = new Set<string>(VISIT_QUESTIONS.map(question => question.id));
+  const output: VisitPlans = {};
+  for (const [placeId, raw] of Object.entries(input).slice(0, 500)) {
+    if (!/^[a-zA-Z0-9_-]{1,100}$/.test(placeId) || !Array.isArray(raw)) continue;
+    output[placeId] = [...new Set(raw.filter((id): id is VisitQuestionId =>
+      typeof id === 'string' && questionIds.has(id)))];
+  }
+  return output;
+}
