@@ -1,4 +1,4 @@
-import { placesWithVerifiedCoordinates } from './directory';
+import { placesWithVerifiedCoordinates } from './directory.ts';
 import type { Place } from './directory';
 
 export type MapRegion = {
