@@ -9,7 +9,10 @@
     "android": "expo start --android",
     "typecheck": "tsc --noEmit",
     "validate-data": "node scripts/validate-data.mjs",
-    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs"
+    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
+    "check:bundle:ios": "expo export --platform ios --output-dir /tmp/rampmobile-ios-export",
+    "check:bundle:android": "expo export --platform android --output-dir /tmp/rampmobile-android-export",
+    "check:expo-compatibility": "expo install --check"
   },
   "dependencies": {
     "expo": "~54.0.0",
