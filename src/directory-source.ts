@@ -66,7 +66,7 @@ export function parseDirectoryResponse(input: unknown): { places: Place[]; updat
   for (const item of root.locations) {
     const row = object(item);
     const id = str(row, 'id', 100);
-    if (!/^[a-zA-Z0-9_-]+$/.test(id) || ids.has(id)) throw new Error('Duplicate/unsafe id: ' + id);
+    if (!/^[a-zA-Z0-9_-]+$/.test(id) || ['__proto__','constructor','prototype'].includes(id.toLowerCase()) || ids.has(id)) throw new Error('Duplicate/unsafe id: ' + id);
     ids.add(id);
     if (typeof row.published !== 'boolean') throw new Error('published must be explicit');
     if (!row.published) continue;
