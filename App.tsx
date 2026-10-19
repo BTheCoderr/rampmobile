@@ -123,7 +123,8 @@ function Main() {
             <Text style={s.heart} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{isSaved ? '♥' : '♡'}</Text>
           </Pressable>
         </View>
-        <Text style={s.mini}>RAMP directory listing · {place.certified}</Text>
+        <Text style={s.mini}>Public RAMP directory sample · {place.certified}</Text>
+        <Text style={s.topics}>Notes mention: {topicsMentioned(place).map(id => ACCESS_TOPICS.find(t => t.id === id)?.label).filter(Boolean).join(', ') || 'See details'}</Text>
         <Text style={s.body} numberOfLines={3}>{place.accessibility}</Text>
         <Action label="View accessibility details →" secondary onPress={() => setSelectedId(place.id)} />
       </View>
@@ -154,12 +155,47 @@ function Main() {
           <View style={s.panel}>
             <Text style={s.sectionTitle} accessibilityRole="header">Accessibility details</Text>
             <Text style={s.body}>{selected.accessibility}</Text>
-            <Text style={s.note}>Details may change. Confirm your specific access requirements directly with the venue before visiting.</Text>
+            <Text style={s.note}>These are public directory notes, not a guarantee of suitability. Conditions may change. Confirm your needs directly with the venue.</Text>
+            <Text style={s.mini}>TOPICS MENTIONED IN THE NOTES</Text>
+            <View style={s.topicWrap}>
+              {topicsMentioned(selected).map(id => (
+                <View key={id} style={s.topicChip}>
+                  <Text style={s.topicChipText}>{ACCESS_TOPICS.find(t => t.id === id)?.label}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={s.note}>A topic label does not mean the feature is currently available or adequate.</Text>
+          </View>
+          <View style={s.panel}>
+            <Text style={s.sectionTitle} accessibilityRole="header">My visit checklist</Text>
+            <Text style={s.body}>Prepare questions to verify with the venue. A checked item records your action, not a RAMP guarantee.</Text>
+            <Text style={s.mini}>{(visitPlans[selected.id] ?? []).length} of {VISIT_QUESTIONS.length} marked</Text>
+            {VISIT_QUESTIONS.map(question => {
+              const checked = (visitPlans[selected.id] ?? []).includes(question.id);
+              return (
+                <Pressable
+                  key={question.id}
+                  accessibilityRole="checkbox"
+                  accessibilityLabel={question.title}
+                  accessibilityState={{ checked }}
+                  onPress={() => toggleVisitQuestion(selected.id, question.id)}
+                  style={({ pressed }) => [s.visitCheck, pressed && s.pressed]}
+                >
+                  <Text style={s.visitSymbol} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{checked ? '☑' : '□'}</Text>
+                  <Text style={s.visitCheckText}>{question.title}</Text>
+                </Pressable>
+              );
+            })}
+            <Text style={s.note}>Your checklist stays on this device. No login, GPS or health information is required.</Text>
           </View>
           <View style={s.panel}>
             <Text style={s.sectionTitle} accessibilityRole="header">Plan your visit</Text>
             <Text style={s.body}>{selected.address}</Text>
-            <Action label="Get directions ↗" onPress={() => openExternal('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(selected.address))} />
+            <Action label="Open map and directions ↗" onPress={() => openExternal(buildDirectionsUrl(selected.address))} />
+            <Action label="Share this place" secondary onPress={() => {
+              Share.share({ message: [selected.name, selected.address, 'RAMP directory: ' + selected.source].join(' | ') })
+                .catch(() => Alert.alert('Unable to share', 'Please try again.'));
+            }} />
             <Action label="Open source directory ↗" secondary onPress={() => openExternal(selected.source)} />
             <Action label={saved.includes(selected.id) ? 'Remove from saved' : 'Save this place'} secondary onPress={() => toggleSaved(selected.id)} />
           </View>
@@ -200,6 +236,30 @@ function Main() {
                     </Pressable>
                   ))}
                 </ScrollView>
+                <Text style={s.label} accessibilityRole="header">Filter by city</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filters}>
+                  {CITIES.map(item => (
+                    <Pressable key={item} accessibilityRole="button" accessibilityLabel={'City: ' + item}
+                      accessibilityState={{ selected: item === city }} onPress={() => setCity(item)}
+                      style={({ pressed }) => [s.filter, item === city && s.activeFilter, pressed && s.pressed]}>
+                      <Text style={[s.filterLabel, item === city && s.activeFilterLabel]}>{item}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+                <Text style={s.label} accessibilityRole="header">Accessibility topics mentioned</Text>
+                <Text style={s.note}>These filters search the public notes. They do not verify if a feature meets your needs.</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filters}>
+                  {([{ id: 'any', label: 'Any topic' }, ...ACCESS_TOPICS] as { id: TopicFilter; label: string }[]).map(item => (
+                    <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={'Notes mention: ' + item.label}
+                      accessibilityState={{ selected: topic === item.id }} onPress={() => setTopic(item.id)}
+                      style={({ pressed }) => [s.filter, topic === item.id && s.activeFilter, pressed && s.pressed]}>
+                      <Text style={[s.filterLabel, topic === item.id && s.activeFilterLabel]}>{item.label}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+                {(query !== '' || category !== 'All' || city !== 'All' || topic !== 'any') && (
+                  <Action label="Clear all filters" secondary onPress={resetFilters} />
+                )}
               </>
             )}
             {tab === 'saved' && (
@@ -218,7 +278,7 @@ function Main() {
                   <View style={s.panel}>
                     <Text style={s.sectionTitle}>{tab === 'saved' ? 'Nothing saved yet' : 'No matches found'}</Text>
                     <Text style={s.body}>Try exploring all available sample places.</Text>
-                    <Action label="Browse all places" onPress={() => { setTab('discover'); setCategory('All'); setQuery(''); }} />
+                    <Action label="Browse all places" onPress={() => { setTab('discover'); resetFilters(); }} />
                   </View>
                 )}
                 <Text style={s.note}>Preview only: {LOCATIONS.length} sampled public listings. Not RAMP's complete, automatically updated directory.</Text>
@@ -301,6 +361,13 @@ const s = StyleSheet.create({
   favorite: { minWidth: 48, minHeight: 48, borderRadius: 13, backgroundColor: C.background, borderColor: C.border, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   heart: { color: C.teal, fontSize: 26 },
   mini: { color: C.teal, fontWeight: '800', fontSize: 12, lineHeight: 18 },
+  topics: { color: C.muted, fontWeight: '600', fontSize: 13, lineHeight: 20 },
+  topicWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  topicChip: { backgroundColor: C.mint, borderColor: C.border, borderWidth: 1, borderRadius: 11, paddingHorizontal: 11, paddingVertical: 8 },
+  topicChipText: { color: C.navy, fontWeight: '700', fontSize: 14 },
+  visitCheck: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 58, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
+  visitSymbol: { color: C.teal, fontSize: 28, width: 34 },
+  visitCheckText: { flex: 1, color: C.ink, fontSize: 16, lineHeight: 23 },
   body: { color: C.ink, fontSize: 16, lineHeight: 24 },
   action: { minHeight: 50, borderRadius: 13, alignItems: 'center', justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 13 },
   primaryAction: { backgroundColor: C.teal },
