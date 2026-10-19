@@ -92,3 +92,24 @@ pushes. These automated tests do not establish device compatibility.
 **Not completed:** production Google Maps key/configuration for Android,
 verified live venue coordinates, RAMP data access, native iOS/Android device QA,
 privacy/branding approval, EAS distribution, Apple or Google store submission.
+
+## Prototype v0.4: real-world visit planning and accessible map defaults
+
+- Share a general pre-visit question template using the native share sheet. It includes
+  public venue details and unanswered generic questions, not private checklist state.
+- Show checklist progress on saved locations; continue the same checklist offline.
+- Remember the individual's Map or List Only preference locally.
+- Open in List Only by default when VoiceOver/TalkBack is active (unless the user
+  explicitly chose Map), or when there are no source-verified pins yet.
+- Explain the RAMP Stamp's limits and optional self-assessment in the Resources
+  screen, linking to the organization's official FAQs.
+- Added 10 new source-level unit test cases for visit-plan sharing and map preferences.
+
+**Validation status:** source files and GitHub commits are verified. No successful EAS
+cloud build, full test suite result, iOS simulator run, Android emulator run or
+physical-device accessibility audit is claimed. Read `docs/device-qa.md` before
+any external trial.
+
+**Important:** This independent prototype remains offline by default. No personal
+health information should be entered into these generic checklists. RAMP must approve
+the app and an authoritative directory feed before publishing an official version.
