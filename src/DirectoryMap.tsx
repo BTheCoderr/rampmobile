@@ -56,10 +56,10 @@ export default function DirectoryMap({ places, onOpenPlace, filterSummary, onCle
       AsyncStorage.getItem(MAP_DISPLAY_STORAGE_KEY),
       AccessibilityInfo.isScreenReaderEnabled().catch(() => false),
     ]).then(([savedMode, screenReaderEnabled]) => {
-      if (mounted) setMode(resolveMapDisplayMode(savedMode, screenReaderEnabled));
+      if (mounted) setMode(resolveMapDisplayMode(savedMode, screenReaderEnabled, mapped.length > 0));
     }).catch(() => { /* The accessible list is already available. */ });
     return () => { mounted = false; };
-  }, []);
+  }, [mapped.length]);
   const chooseMode = useCallback((nextMode: MapDisplayMode) => {
     setMode(nextMode);
     AsyncStorage.setItem(MAP_DISPLAY_STORAGE_KEY, nextMode).catch(() => {});
