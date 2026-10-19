@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "RAMP Mobile Concept",
+    "slug": "ramp-mobile-concept",
+    "scheme": "rampmobileconcept",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F4F8F8",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F4F8F8"
+      }
+    },
+    "extra": {
+      "conceptOnly": true,
+      "dataStatus": "Public directory sample, not live or complete"
+    }
+  }
+}
