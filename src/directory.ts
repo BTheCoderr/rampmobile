@@ -2,7 +2,31 @@
 export type Place = {
   id: string; name: string; type: string; city: string; state: string;
   address: string; certified: string; accessibility: string; source: string;
+  // Only authorized, source-verified geographic coordinates produce map pins.
+  coordinates?: VerifiedCoordinates;
 };
+
+export type VerifiedCoordinates = {
+  latitude: number;
+  longitude: number;
+  verifiedAt: string;
+  sourceUrl: string;
+};
+
+export function hasVerifiedCoordinates(place: Place): place is Place & { coordinates: VerifiedCoordinates } {
+  const value = place.coordinates;
+  return Boolean(value &&
+    Number.isFinite(value.latitude) &&
+    Number.isFinite(value.longitude) &&
+    value.latitude >= -90 && value.latitude <= 90 &&
+    value.longitude >= -180 && value.longitude <= 180 &&
+    typeof value.verifiedAt === 'string' && !Number.isNaN(Date.parse(value.verifiedAt)) &&
+    typeof value.sourceUrl === 'string' && /^https:\/\//i.test(value.sourceUrl));
+}
+
+export function placesWithVerifiedCoordinates(places: readonly Place[]): Array<Place & { coordinates: VerifiedCoordinates }> {
+  return places.filter(hasVerifiedCoordinates);
+}
 
 export const ACCESS_TOPICS = [
   { id: 'parking', label: 'Parking', test: /parking|accessible spaces/i },
