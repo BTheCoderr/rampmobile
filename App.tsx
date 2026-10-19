@@ -1,25 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import seedLocations from './src/places.json';
+import { ACCESS_TOPICS, VISIT_QUESTIONS, buildDirectionsUrl, filterPlaces, listCities, safeSavedIds, safeVisitPlans, topicsMentioned } from './src/directory';
+import type { Place, TopicFilter, VisitPlans, VisitQuestionId } from './src/directory';
 
-type Place = {
-  id: string;
-  name: string;
-  type: string;
-  city: string;
-  state: string;
-  address: string;
-  certified: string;
-  accessibility: string;
-  source: string;
-};
 type Tab = 'discover' | 'saved' | 'resources';
 const LOCATIONS: Place[] = seedLocations;
 const CATEGORIES = ['All', ...Array.from(new Set(LOCATIONS.map(place => place.type))).sort()];
+const CITIES = ['All', ...listCities(LOCATIONS)];
+const VALID_IDS = LOCATIONS.map(place => place.id);
 const STORAGE_KEY = 'rampmobile:concept:saved:v1';
+const PLAN_STORAGE_KEY = 'rampmobile:concept:visit-plans:v1';
 const ROOT = 'https://rampapproved.com';
 const C = {
   background: '#F4F8F8', white: '#FFFFFF', navy: '#123648', teal: '#006D60',
@@ -53,6 +47,10 @@ function Main() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
+  const [city, setCity] = useState('All');
+  const [topic, setTopic] = useState<TopicFilter>('any');
+  const [visitPlans, setVisitPlans] = useState<VisitPlans>({});
+  const [plansReady, setPlansReady] = useState(false);
   const [saved, setSaved] = useState<string[]>([]);
   const [savedReady, setSavedReady] = useState(false);
 
@@ -62,7 +60,7 @@ function Main() {
       .then(value => {
         if (!mounted) return;
         const parsed: unknown = value ? JSON.parse(value) : [];
-        if (Array.isArray(parsed)) setSaved(parsed.filter((id): id is string => typeof id === 'string'));
+        setSaved(safeSavedIds(parsed, VALID_IDS));
       })
       .catch(() => {})
       .finally(() => { if (mounted) setSavedReady(true); });
@@ -73,14 +71,37 @@ function Main() {
     if (savedReady) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(saved)).catch(() => {});
   }, [saved, savedReady]);
 
+  useEffect(() => {
+    let mounted = true;
+    AsyncStorage.getItem(PLAN_STORAGE_KEY)
+      .then(value => { if (mounted) setVisitPlans(safeVisitPlans(value ? JSON.parse(value) : {}, VALID_IDS)); })
+      .catch(() => {})
+      .finally(() => { if (mounted) setPlansReady(true); });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (plansReady) AsyncStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(visitPlans)).catch(() => {});
+  }, [visitPlans, plansReady]);
+
+  const toggleVisitQuestion = useCallback((placeId: string, questionId: VisitQuestionId) => {
+    setVisitPlans(current => {
+      const before = current[placeId] ?? [];
+      return { ...current, [placeId]: before.includes(questionId)
+        ? before.filter(id => id !== questionId) : [...before, questionId] };
+    });
+  }, []);
+
+  const resetFilters = () => { setQuery(''); setCategory('All'); setCity('All'); setTopic('any'); };
+
   const toggleSaved = useCallback((id: string) => {
     setSaved(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
   }, []);
 
-  const filtered = useMemo(() => LOCATIONS.filter(place => {
-    const text = [place.name, place.type, place.city, place.address, place.accessibility].join(' ').toLowerCase();
-    return (category === 'All' || category === place.type) && text.includes(query.trim().toLowerCase());
-  }), [query, category]);
+  const filtered = useMemo(
+    () => filterPlaces(LOCATIONS, { query, category, city, topic }),
+    [query, category, city, topic],
+  );
   const selected = LOCATIONS.find(place => place.id === selectedId);
   const visible = tab === 'saved' ? LOCATIONS.filter(place => saved.includes(place.id)) : filtered;
 
