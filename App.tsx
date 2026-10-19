@@ -4,14 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import seedLocations from './src/places.json';
-import { ACCESS_TOPICS, VISIT_QUESTIONS, buildDirectionsUrl, filterPlaces, listCities, safeSavedIds, safeVisitPlans, topicsMentioned } from './src/directory';
+import { ACCESS_TOPICS, VISIT_QUESTIONS, buildDirectionsUrl, filterPlaces, listCities, safeStoredFavoriteIds, safeVisitPlans, topicsMentioned } from './src/directory';
+import DirectoryMap from './src/DirectoryMap';
+import { DEMO_NOTICE, loadDirectory } from './src/directory-source';
+import type { DirectoryResult } from './src/directory-source';
 import type { Place, TopicFilter, VisitPlans, VisitQuestionId } from './src/directory';
 
-type Tab = 'discover' | 'saved' | 'resources';
-const LOCATIONS: Place[] = seedLocations;
-const CATEGORIES = ['All', ...Array.from(new Set(LOCATIONS.map(place => place.type))).sort()];
-const CITIES = ['All', ...listCities(LOCATIONS)];
-const VALID_IDS = LOCATIONS.map(place => place.id);
+type Tab = 'discover' | 'map' | 'saved' | 'resources';
+const SAMPLE_PLACES: Place[] = seedLocations;
 const STORAGE_KEY = 'rampmobile:concept:saved:v1';
 const PLAN_STORAGE_KEY = 'rampmobile:concept:visit-plans:v1';
 const ROOT = 'https://rampapproved.com';
@@ -44,6 +44,13 @@ function Action({ label, onPress, secondary = false }: { label: string; onPress:
 
 function Main() {
   const [tab, setTab] = useState<Tab>('discover');
+  const [places, setPlaces] = useState<Place[]>(SAMPLE_PLACES);
+  const [directoryMode, setDirectoryMode] = useState<DirectoryResult['mode']>('sample');
+  const [directoryNotice, setDirectoryNotice] = useState(DEMO_NOTICE);
+  const [directoryUpdatedAt, setDirectoryUpdatedAt] = useState<string | undefined>();
+  const [refreshing, setRefreshing] = useState(false);
+  const CATEGORIES = useMemo(() => ['All', ...new Set(places.map(p => p.type))].sort((a,b) => a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b)), [places]);
+  const CITIES = useMemo(() => ['All', ...listCities(places)], [places]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
@@ -60,7 +67,7 @@ function Main() {
       .then(value => {
         if (!mounted) return;
         const parsed: unknown = value ? JSON.parse(value) : [];
-        setSaved(safeSavedIds(parsed, VALID_IDS));
+        setSaved(safeStoredFavoriteIds(parsed));
       })
       .catch(() => {})
       .finally(() => { if (mounted) setSavedReady(true); });
@@ -74,7 +81,7 @@ function Main() {
   useEffect(() => {
     let mounted = true;
     AsyncStorage.getItem(PLAN_STORAGE_KEY)
-      .then(value => { if (mounted) setVisitPlans(safeVisitPlans(value ? JSON.parse(value) : {}, VALID_IDS)); })
+      .then(value => { if (mounted) setVisitPlans(safeVisitPlans(value ? JSON.parse(value) : {}, [...SAMPLE_PLACES.map(p => p.id), ...places.map(p => p.id)])); })
       .catch(() => {})
       .finally(() => { if (mounted) setPlansReady(true); });
     return () => { mounted = false; };
@@ -83,6 +90,30 @@ function Main() {
   useEffect(() => {
     if (plansReady) AsyncStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(visitPlans)).catch(() => {});
   }, [visitPlans, plansReady]);
+
+  useEffect(() => {
+    let active = true;
+    loadDirectory(process.env.EXPO_PUBLIC_RAMP_DIRECTORY_URL, SAMPLE_PLACES).then(result => {
+      if (!active) return;
+      setPlaces(result.places);
+      setDirectoryMode(result.mode);
+      setDirectoryNotice(result.notice);
+      setDirectoryUpdatedAt(result.updatedAt);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const refreshDirectory = useCallback(async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const result = await loadDirectory(process.env.EXPO_PUBLIC_RAMP_DIRECTORY_URL, SAMPLE_PLACES);
+      setPlaces(result.places);
+      setDirectoryMode(result.mode);
+      setDirectoryNotice(result.notice);
+      setDirectoryUpdatedAt(result.updatedAt);
+    } finally { setRefreshing(false); }
+  }, [refreshing]);
 
   const toggleVisitQuestion = useCallback((placeId: string, questionId: VisitQuestionId) => {
     setVisitPlans(current => {
@@ -99,11 +130,11 @@ function Main() {
   }, []);
 
   const filtered = useMemo(
-    () => filterPlaces(LOCATIONS, { query, category, city, topic }),
-    [query, category, city, topic],
+    () => filterPlaces(places, { query, category, city, topic }),
+    [places, query, category, city, topic],
   );
-  const selected = LOCATIONS.find(place => place.id === selectedId);
-  const visible = tab === 'saved' ? LOCATIONS.filter(place => saved.includes(place.id)) : filtered;
+  const selected = places.find(place => place.id === selectedId);
+  const visible = tab === 'saved' ? places.filter(place => saved.includes(place.id)) : filtered;
 
   function PlaceCard({ place }: { place: Place }) {
     const isSaved = saved.includes(place.id);
@@ -202,7 +233,26 @@ function Main() {
         </ScrollView>
       ) : (
         <>
+          {tab === 'map' ? (
+            <DirectoryMap
+              places={filtered}
+              onOpenPlace={setSelectedId}
+              onClearFilters={resetFilters}
+              filterSummary={query || category !== 'All' || city !== 'All' || topic !== 'any'
+                ? 'Map follows your Explore search and filters'
+                : 'All places'}
+            />
+          ) : (
           <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.content}>
+            {tab === 'discover' && (
+              <>
+                <View style={s.sourcePanel}>
+                  <Text style={s.sourceTitle}>Directory: {directoryMode === 'live' ? 'Live connection' : 'Offline prototype'}</Text>
+                  <Text style={s.note}>{directoryNotice}{directoryUpdatedAt ? ' Last updated: ' + directoryUpdatedAt : ''}</Text>
+                  <Action label={refreshing ? 'Refreshing…' : 'Refresh directory'} secondary onPress={() => { void refreshDirectory(); }} />
+                </View>
+              </> 
+            )}
             {tab === 'discover' && (
               <>
                 <View style={s.hero}>
@@ -281,7 +331,7 @@ function Main() {
                     <Action label="Browse all places" onPress={() => { setTab('discover'); resetFilters(); }} />
                   </View>
                 )}
-                <Text style={s.note}>Preview only: {LOCATIONS.length} sampled public listings. Not RAMP's complete, automatically updated directory.</Text>
+                <Text style={s.note}>{directoryMode === 'live' ? 'Configured live directory response.' : 'Preview only: offline sample listings, not the complete RAMP directory.'} {places.length} current visible-source records.</Text>
               </>
             )}
             {tab === 'resources' && (
@@ -308,8 +358,9 @@ function Main() {
               </>
             )}
           </ScrollView>
+          )}
           <View style={s.tabs}>
-            {([['discover','Explore'], ['saved','Saved'], ['resources','Resources']] as [Tab,string][]).map(([key,label]) => (
+            {([['discover','Explore'], ['map','Map'], ['saved','Saved'], ['resources','Resources']] as [Tab,string][]).map(([key,label]) => (
               <Pressable
                 key={key}
                 accessibilityRole="tab"
@@ -340,6 +391,8 @@ const s = StyleSheet.create({
   subtitle: { color: C.muted, fontSize: 14, lineHeight: 21 },
   tag: { backgroundColor: C.mint, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7 },
   tagText: { color: C.navy, fontSize: 11, fontWeight: '800' },
+  sourcePanel: { borderRadius: 16, borderColor: C.border, borderWidth: 1, backgroundColor: C.white, padding: 14, gap: 8 },
+  sourceTitle: { color: C.navy, fontSize: 16, fontWeight: '900' },
   content: { gap: 13, padding: 18, paddingBottom: 36 },
   hero: { backgroundColor: C.navy, borderRadius: 22, padding: 24, gap: 12 },
   overline: { fontSize: 11, letterSpacing: 1.4, fontWeight: '900', color: '#ADE6D9' },
