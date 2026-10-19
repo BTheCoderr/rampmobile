@@ -348,8 +348,14 @@ function Main() {
                 <Text style={s.pageTitle} accessibilityRole="header">Resources</Text>
                 <Text style={s.body}>Learn about RAMP and explore the organization's current accessibility services.</Text>
                 <View style={s.panel}>
+                  <Text style={s.sectionTitle} accessibilityRole="header">Understanding the RAMP Stamp</Text>
+                  <Text style={s.body}>The RAMP Stamp recognizes a location's work toward accessibility and inclusion. It does not guarantee ADA compliance or that every visitor's needs will be met.</Text>
+                  <Text style={s.body}>The stamp relates to a particular location. Conditions can change, so contact a venue before visiting when you have specific access questions.</Text>
+                  <Action label="Read RAMP's official FAQs ↗" secondary onPress={() => openExternal(ROOT + '/faqs/')} />
+                </View>
+                <View style={s.panel}>
                   <Text style={s.sectionTitle} accessibilityRole="header">Self-assessment</Text>
-                  <Text style={s.body}>Start with RAMP's official accessibility questionnaire. This does not establish certification or legal compliance.</Text>
+                  <Text style={s.body}>RAMP's self-assessment helps organizations think about access before a Roll Through. It is optional and does not establish certification or legal compliance.</Text>
                   <Action label="Open RAMP self-assessment ↗" onPress={() => openExternal(ROOT + '/self-assessment/')} />
                 </View>
                 <View style={s.panel}>
