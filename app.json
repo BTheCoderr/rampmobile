@@ -8,12 +8,15 @@
     "userInterfaceStyle": "light",
     "backgroundColor": "#F4F8F8",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bthecoderr.rampmobileconcept",
+      "usesNonExemptEncryption": false
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#F4F8F8"
-      }
+      },
+      "package": "com.bthecoderr.rampmobileconcept"
     },
     "extra": {
       "conceptOnly": true,
