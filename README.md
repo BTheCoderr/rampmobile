@@ -37,3 +37,18 @@ The prototype has not yet been installed or tested on a physical device or built
 7. Finalize branding, privacy disclosures, security, TestFlight/Android testing and store review.
 
 **Accuracy note:** accessibility conditions change; users should confirm specific needs directly with a venue. The prototype does not make new accessibility or legal compliance determinations.
+
+## Prototype v0.2: field-visit experience
+
+- Filter sample public-directory locations by name, category, city and *topics mentioned in their notes*.
+- Cautious topic labels: a restroom, elevator or parking mention is not a guarantee of adequacy or access.
+- View place details and open an external map for directions; the app does not request your location.
+- Save a four-question pre-visit checklist per venue on your device without a login or backend.
+- Use the native iOS/Android share sheet to share the name, address and directory source.
+- Separate, reusable TypeScript catalog logic with eight Node unit tests and CI checks.
+
+Run `npm run test:unit` with Node 22+, `npm run validate-data`, and `npm run typecheck`. GitHub Actions is configured to attempt all three after pushes.
+
+## Remaining before production
+
+This is a prototype with nine public sample listings, not an authorized live data feed. For the next phase, obtain RAMP's written go-ahead, website data access and verified coordinates before adding map pins, nearby-distance sorting or managed directory updates. Conduct VoiceOver/TalkBack and physical-device QA; confirm all outgoing service URLs. Do not submit the unofficial concept under RAMP's name.
