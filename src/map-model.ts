@@ -26,3 +26,11 @@ export function initialMapRegion(places: readonly Place[]): MapRegion {
     longitudeDelta: Math.min(180, Math.max(0.05, (maxLon - minLon) * 1.5)),
   };
 }
+
+export type MapDisplayMode = 'map' | 'list';
+
+/** Honor a stored choice; screen reader users default to the text list. */
+export function resolveMapDisplayMode(stored: unknown, screenReaderEnabled: boolean): MapDisplayMode {
+  if (stored === 'map' || stored === 'list') return stored;
+  return screenReaderEnabled ? 'list' : 'map';
+}
