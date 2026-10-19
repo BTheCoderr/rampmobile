@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import seedLocations from './src/places.json';
-import { ACCESS_TOPICS, VISIT_QUESTIONS, buildDirectionsUrl, filterPlaces, listCities, safeStoredFavoriteIds, safeVisitPlans, topicsMentioned } from './src/directory';
+import { ACCESS_TOPICS, VISIT_QUESTIONS, buildDirectionsUrl, filterPlaces, listCities, safeStoredFavoriteIds, safeStoredVisitPlans, topicsMentioned } from './src/directory';
 import DirectoryMap from './src/DirectoryMap';
 import { DEMO_NOTICE, loadDirectory } from './src/directory-source';
 import type { DirectoryResult } from './src/directory-source';
@@ -81,7 +81,7 @@ function Main() {
   useEffect(() => {
     let mounted = true;
     AsyncStorage.getItem(PLAN_STORAGE_KEY)
-      .then(value => { if (mounted) setVisitPlans(safeVisitPlans(value ? JSON.parse(value) : {}, [...SAMPLE_PLACES.map(p => p.id), ...places.map(p => p.id)])); })
+      .then(value => { if (mounted) setVisitPlans(safeStoredVisitPlans(value ? JSON.parse(value) : {})); })
       .catch(() => {})
       .finally(() => { if (mounted) setPlansReady(true); });
     return () => { mounted = false; };
