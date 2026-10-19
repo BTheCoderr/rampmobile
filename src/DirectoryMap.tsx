@@ -1,7 +1,9 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker } from 'react-native-maps';
-import { initialMapRegion } from './map-model';
+import { initialMapRegion, resolveMapDisplayMode } from './map-model';
+import type { MapDisplayMode } from './map-model';
 import { buildDirectionsUrl, placesWithVerifiedCoordinates } from './directory';
 import type { Place } from './directory';
 
@@ -13,6 +15,7 @@ type Props = {
 };
 
 const theme = { ink: '#153346', teal: '#006D60', navy: '#123648', muted: '#45616B', border: '#CCDEDE' };
+const MAP_DISPLAY_STORAGE_KEY = 'rampmobile:map-display:v1';
 async function openDirections(place: Place) {
   const url = buildDirectionsUrl(place.address);
   try {
@@ -46,7 +49,21 @@ function ModeSwitch({ mode, setMode }: { mode: 'map' | 'list'; setMode: (mode: '
 export default function DirectoryMap({ places, onOpenPlace, filterSummary, onClearFilters }: Props) {
   const mapped = useMemo(() => placesWithVerifiedCoordinates(places), [places]);
   const region = useMemo(() => initialMapRegion(mapped), [mapped]);
-  const [mode, setMode] = useState<'map' | 'list'>('map');
+  const [mode, setMode] = useState<MapDisplayMode>('list');
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      AsyncStorage.getItem(MAP_DISPLAY_STORAGE_KEY),
+      AccessibilityInfo.isScreenReaderEnabled().catch(() => false),
+    ]).then(([savedMode, screenReaderEnabled]) => {
+      if (mounted) setMode(resolveMapDisplayMode(savedMode, screenReaderEnabled));
+    }).catch(() => { /* The accessible list is already available. */ });
+    return () => { mounted = false; };
+  }, []);
+  const chooseMode = useCallback((nextMode: MapDisplayMode) => {
+    setMode(nextMode);
+    AsyncStorage.setItem(MAP_DISPLAY_STORAGE_KEY, nextMode).catch(() => {});
+  }, []);
   const mapRef = useRef<MapView>(null);
   const mappedIds = useMemo(() => new Set(mapped.map(p => p.id)), [mapped]);
 
@@ -56,7 +73,7 @@ export default function DirectoryMap({ places, onOpenPlace, filterSummary, onCle
         <Text accessibilityRole="header" style={styles.title}>Explore locations</Text>
         <Text style={styles.helper}>{places.length} results · {mapped.length} verified map pins</Text>
         <Text style={styles.helper}>{filterSummary}</Text>
-        <ModeSwitch mode={mode} setMode={setMode} />
+        <ModeSwitch mode={mode} setMode={chooseMode} />
         {filterSummary !== 'All places' && (
           <Pressable accessibilityRole="button" accessibilityLabel="Clear all directory search filters"
             onPress={onClearFilters} style={styles.clear}>
