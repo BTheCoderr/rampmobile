@@ -17,3 +17,11 @@ test('invalid stored values fall back to the accessible default', () => {
   assert.equal(resolveMapDisplayMode('NOT-A-MODE', true), 'list');
   assert.equal(resolveMapDisplayMode({}, false), 'map');
 });
+
+test('unmapped demo opens the accessible list without an empty map', () => {
+  assert.equal(resolveMapDisplayMode(null, false, false), 'list');
+  assert.equal(resolveMapDisplayMode(null, true, false), 'list');
+  // Explicit user choices remain respected.
+  assert.equal(resolveMapDisplayMode('map', false, false), 'map');
+  assert.equal(resolveMapDisplayMode(null, false, true), 'map');
+});
