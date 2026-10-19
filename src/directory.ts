@@ -87,3 +87,10 @@ export function safeVisitPlans(input: unknown, validIds: readonly string[]): Vis
   }
   return output;
 }
+
+/** Preserve opaque saved IDs across offline periods without retaining personal data. */
+export function safeStoredFavoriteIds(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return [...new Set(input.filter((id): id is string =>
+    typeof id === 'string' && /^[a-zA-Z0-9_-]{1,100}$/.test(id)))].slice(0, 500);
+}
