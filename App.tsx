@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, BackHandler, Keyboard, Linking, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -26,7 +26,7 @@ async function openExternal(url: string) {
     if (!(await Linking.canOpenURL(url))) throw new Error('Unsupported URL');
     await Linking.openURL(url);
   } catch {
-    Alert.alert('Link unavailable', 'Please open the RAMP website in your browser.');
+    Alert.alert('Link unavailable', 'This destination could not be opened. Please try your browser or maps app.');
   }
 }
 
@@ -115,6 +115,15 @@ function Main() {
       setDirectoryUpdatedAt(result.updatedAt);
     } finally { setRefreshing(false); }
   }, [refreshing]);
+
+  useEffect(() => {
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (selectedId) { setSelectedId(null); return true; }
+      if (tab !== 'discover') { setTab('discover'); return true; }
+      return false;
+    });
+    return () => listener.remove();
+  }, [selectedId, tab]);
 
   const toggleVisitQuestion = useCallback((placeId: string, questionId: VisitQuestionId) => {
     setVisitPlans(current => {
@@ -381,7 +390,7 @@ function Main() {
                 accessibilityRole="tab"
                 accessibilityState={{ selected: tab === key }}
                 accessibilityLabel={label}
-                onPress={() => setTab(key)}
+                onPress={() => { Keyboard.dismiss(); setTab(key); }}
                 style={({ pressed }) => [s.tab, tab === key && s.activeTab, pressed && s.pressed]}
               >
                 <Text style={[s.tabText, tab === key && s.activeTabText]}>{label}</Text>
