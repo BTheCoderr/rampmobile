@@ -30,7 +30,11 @@ export function initialMapRegion(places: readonly Place[]): MapRegion {
 export type MapDisplayMode = 'map' | 'list';
 
 /** Honor a stored choice; screen reader users default to the text list. */
-export function resolveMapDisplayMode(stored: unknown, screenReaderEnabled: boolean): MapDisplayMode {
+export function resolveMapDisplayMode(
+  stored: unknown,
+  screenReaderEnabled: boolean,
+  hasVerifiedMapPins = true,
+): MapDisplayMode {
   if (stored === 'map' || stored === 'list') return stored;
-  return screenReaderEnabled ? 'list' : 'map';
+  return screenReaderEnabled || !hasVerifiedMapPins ? 'list' : 'map';
 }
