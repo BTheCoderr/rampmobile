@@ -6,6 +6,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import seedLocations from './src/places.json';
 import { ACCESS_TOPICS, VISIT_QUESTIONS, buildDirectionsUrl, filterPlaces, listCities, safeStoredFavoriteIds, safeStoredVisitPlans, topicsMentioned } from './src/directory';
 import DirectoryMap from './src/DirectoryMap';
+import { buildVenueQuestionMessage, visitPlanProgress } from './src/visit-plan';
 import { DEMO_NOTICE, loadDirectory } from './src/directory-source';
 import type { DirectoryResult } from './src/directory-source';
 import type { Place, TopicFilter, VisitPlans, VisitQuestionId } from './src/directory';
@@ -154,7 +155,10 @@ function Main() {
             <Text style={s.heart} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{isSaved ? '♥' : '♡'}</Text>
           </Pressable>
         </View>
-        <Text style={s.mini}>Public RAMP directory sample · {place.certified}</Text>
+        <Text style={s.mini}>{directoryMode === 'live' ? 'RAMP directory record' : 'Public RAMP directory sample'} · {place.certified}</Text>
+        {tab === 'saved' && (
+          <Text style={s.topics}>Visit checklist: {visitPlanProgress(visitPlans[place.id] ?? []).complete} of {VISIT_QUESTIONS.length} marked</Text>
+        )}
         <Text style={s.topics}>Notes mention: {topicsMentioned(place).map(id => ACCESS_TOPICS.find(t => t.id === id)?.label).filter(Boolean).join(', ') || 'See details'}</Text>
         <Text style={s.body} numberOfLines={3}>{place.accessibility}</Text>
         <Action label="View accessibility details →" secondary onPress={() => setSelectedId(place.id)} />
@@ -200,7 +204,7 @@ function Main() {
           <View style={s.panel}>
             <Text style={s.sectionTitle} accessibilityRole="header">My visit checklist</Text>
             <Text style={s.body}>Prepare questions to verify with the venue. A checked item records your action, not a RAMP guarantee.</Text>
-            <Text style={s.mini}>{(visitPlans[selected.id] ?? []).length} of {VISIT_QUESTIONS.length} marked</Text>
+            <Text style={s.mini}>{visitPlanProgress(visitPlans[selected.id] ?? []).complete} of {VISIT_QUESTIONS.length} marked</Text>
             {VISIT_QUESTIONS.map(question => {
               const checked = (visitPlans[selected.id] ?? []).includes(question.id);
               return (
@@ -218,6 +222,11 @@ function Main() {
               );
             })}
             <Text style={s.note}>Your checklist stays on this device. No login, GPS or health information is required.</Text>
+            <Action label="Share questions to ask this venue" secondary onPress={() => {
+              Share.share({ message: buildVenueQuestionMessage(selected, visitPlans[selected.id] ?? []) })
+                .catch(() => Alert.alert('Unable to share', 'Please try again.'));
+            }} />
+            <Text style={s.note}>Only the venue's public details and general unanswered questions are shared. Your saved checklist and personal data are not included.</Text>
           </View>
           <View style={s.panel}>
             <Text style={s.sectionTitle} accessibilityRole="header">Plan your visit</Text>
