@@ -6,12 +6,14 @@ import { initialMapRegion, resolveMapDisplayMode } from './map-model';
 import type { MapDisplayMode } from './map-model';
 import { buildDirectionsUrl, placesWithVerifiedCoordinates } from './directory';
 import type { Place } from './directory';
+import type { DirectoryMode } from './directory-source';
 
 type Props = {
   places: readonly Place[];
   onOpenPlace: (id: string) => void;
   filterSummary: string;
   onClearFilters: () => void;
+  directoryMode: DirectoryMode;
 };
 
 const theme = { ink: '#153346', teal: '#006D60', navy: '#123648', muted: '#45616B', border: '#CCDEDE' };
@@ -46,7 +48,7 @@ function ModeSwitch({ mode, setMode }: { mode: 'map' | 'list'; setMode: (mode: '
  * is always available. GPS permission is never requested. Pins are not shown
  * for public sample addresses without source-verified coordinates.
  */
-export default function DirectoryMap({ places, onOpenPlace, filterSummary, onClearFilters }: Props) {
+export default function DirectoryMap({ places, onOpenPlace, filterSummary, onClearFilters, directoryMode }: Props) {
   const mapped = useMemo(() => placesWithVerifiedCoordinates(places), [places]);
   const region = useMemo(() => initialMapRegion(mapped), [mapped]);
   const [mode, setMode] = useState<MapDisplayMode>('list');
@@ -72,6 +74,9 @@ export default function DirectoryMap({ places, onOpenPlace, filterSummary, onCle
       <View style={styles.heading}>
         <Text accessibilityRole="header" style={styles.title}>Explore locations</Text>
         <Text style={styles.helper}>{places.length} results · {mapped.length} verified map pins</Text>
+        <Text style={styles.sourceStatus}>{directoryMode === 'live' ? 'Live directory feed' :
+          directoryMode === 'stale' ? 'Connection lost: these listings may now be outdated or withdrawn' :
+          'Offline prototype: sample records, not a current directory'}</Text>
         <Text style={styles.helper}>{filterSummary}</Text>
         <ModeSwitch mode={mode} setMode={chooseMode} />
         {filterSummary !== 'All places' && (
@@ -118,7 +123,7 @@ export default function DirectoryMap({ places, onOpenPlace, filterSummary, onCle
         {mapped.length === 0 && places.length > 0 && (
           <View style={styles.notice}>
             <Text accessibilityRole="header" style={styles.noticeTitle}>Address listings are available, but verified pins are not yet.</Text>
-            <Text style={styles.helper}>The sample directory does not provide verified coordinates. We will not guess pin locations. Select any venue below to view its accessibility notes or open directions.</Text>
+            <Text style={styles.helper}>These listings do not include source-verified coordinates. We will not guess pin locations. Select a venue below to view its notes or open directions.</Text>
           </View>
         )}
         <Text accessibilityRole="header" style={styles.section}>Accessible location list</Text>
@@ -159,6 +164,7 @@ const styles = StyleSheet.create({
   heading: { paddingHorizontal: 18, paddingTop: 16, paddingBottom: 10, gap: 6 },
   title: { color: theme.ink, fontSize: 26, lineHeight: 33, fontWeight: '900' },
   helper: { color: theme.muted, fontSize: 14, lineHeight: 21 },
+  sourceStatus: { color: theme.teal, fontSize: 13, lineHeight: 19, fontWeight: '800' },
   modes: { flexDirection: 'row', gap: 10, marginTop: 9, marginBottom: 5 },
   mode: { flex: 1, minHeight: 50, justifyContent: 'center', alignItems: 'center', borderRadius: 12, borderWidth: 1.5, borderColor: theme.border, backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 8 },
   modeSelected: { backgroundColor: theme.navy, borderColor: theme.navy },
