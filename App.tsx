@@ -257,6 +257,8 @@ function Main() {
                 .catch(() => Alert.alert('Unable to share', 'Please try again.'));
             }} />
             <Action label="Open source directory ↗" secondary onPress={() => openExternal(selected.source)} />
+            <Action label="Report changed or incorrect accessibility information ↗" secondary onPress={() => openExternal(ROOT + '/contact-us/')} />
+            <Text style={s.note}>This opens RAMP's official contact form. Include the location name when reporting a change. No report is submitted by this app.</Text>
             <Action label={saved.includes(selected.id) ? 'Remove from saved' : 'Save this place'} secondary onPress={() => toggleSaved(selected.id)} />
           </View>
         </ScrollView>
@@ -267,6 +269,7 @@ function Main() {
               places={filtered}
               onOpenPlace={setSelectedId}
               onClearFilters={resetFilters}
+              directoryMode={directoryMode}
               filterSummary={query || category !== 'All' || city !== 'All' || topic !== 'any'
                 ? 'Map follows your Explore search and filters'
                 : 'All places'}
@@ -382,6 +385,11 @@ function Main() {
                   <Text style={s.sectionTitle} accessibilityRole="header">Schedule a Roll Through</Text>
                   <Text style={s.body}>Request an accessibility visit using the official RAMP website.</Text>
                   <Action label="Open Roll Through request ↗" onPress={() => openExternal(ROOT + '/schedule-a-roll-through/')} />
+                </View>
+                <View style={s.panel}>
+                  <Text style={s.sectionTitle} accessibilityRole="header">Report a directory change</Text>
+                  <Text style={s.body}>Accessibility conditions, location details, and RAMP Stamp status can change. Contact RAMP if a listing needs attention.</Text>
+                  <Action label="Open RAMP's official contact form ↗" secondary onPress={() => openExternal(ROOT + '/contact-us/')} />
                 </View>
                 <View style={s.panel}>
                   <Text style={s.sectionTitle} accessibilityRole="header">About RAMP</Text>
