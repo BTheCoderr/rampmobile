@@ -12,7 +12,8 @@
     "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
     "check:bundle:ios": "expo export --platform ios --output-dir /tmp/rampmobile-ios-export",
     "check:bundle:android": "expo export --platform android --output-dir /tmp/rampmobile-android-export",
-    "check:expo-compatibility": "expo install --check"
+    "check:expo-compatibility": "expo install --check",
+    "preflight": "node scripts/preflight.mjs"
   },
   "dependencies": {
     "expo": "~54.0.0",

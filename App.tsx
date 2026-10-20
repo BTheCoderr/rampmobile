@@ -6,6 +6,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import seedLocations from './src/places.json';
 import { ACCESS_TOPICS, VISIT_QUESTIONS, buildDirectionsUrl, filterPlaces, listCities, safeStoredFavoriteIds, safeStoredVisitPlans, topicsMentioned } from './src/directory';
 import DirectoryMap from './src/DirectoryMap';
+import { MobileErrorBoundary } from './src/MobileErrorBoundary';
 import { buildVenueQuestionMessage, visitPlanProgress } from './src/visit-plan';
 import { DEMO_NOTICE, loadDirectory, reconcileDirectoryRefresh } from './src/directory-source';
 import type { DirectoryResult } from './src/directory-source';
@@ -423,7 +424,7 @@ function Main() {
 }
 
 export default function App() {
-  return <SafeAreaProvider><Main /></SafeAreaProvider>;
+  return <MobileErrorBoundary><SafeAreaProvider><Main /></SafeAreaProvider></MobileErrorBoundary>;
 }
 
 const s = StyleSheet.create({
