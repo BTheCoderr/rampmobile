@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, BackHandler, Keyboard, Linking, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
@@ -7,7 +7,7 @@ import seedLocations from './src/places.json';
 import { ACCESS_TOPICS, VISIT_QUESTIONS, buildDirectionsUrl, filterPlaces, listCities, safeStoredFavoriteIds, safeStoredVisitPlans, topicsMentioned } from './src/directory';
 import DirectoryMap from './src/DirectoryMap';
 import { buildVenueQuestionMessage, visitPlanProgress } from './src/visit-plan';
-import { DEMO_NOTICE, loadDirectory } from './src/directory-source';
+import { DEMO_NOTICE, loadDirectory, reconcileDirectoryRefresh } from './src/directory-source';
 import type { DirectoryResult } from './src/directory-source';
 import type { Place, TopicFilter, VisitPlans, VisitQuestionId } from './src/directory';
 
@@ -50,6 +50,17 @@ function Main() {
   const [directoryNotice, setDirectoryNotice] = useState(DEMO_NOTICE);
   const [directoryUpdatedAt, setDirectoryUpdatedAt] = useState<string | undefined>();
   const [refreshing, setRefreshing] = useState(false);
+  // A refresh can finish after initial loading; discard the older response.
+  const directoryRequestId = useRef(0);
+  const lastDirectory = useRef<DirectoryResult>({ places: SAMPLE_PLACES, mode: 'sample', notice: DEMO_NOTICE });
+  const applyDirectory = useCallback((incoming: DirectoryResult) => {
+    const next = reconcileDirectoryRefresh(lastDirectory.current, incoming);
+    lastDirectory.current = next;
+    setPlaces(next.places);
+    setDirectoryMode(next.mode);
+    setDirectoryNotice(next.notice);
+    setDirectoryUpdatedAt(next.updatedAt);
+  }, []);
   const CATEGORIES = useMemo(() => ['All', ...new Set(places.map(p => p.type))].sort((a,b) => a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b)), [places]);
   const CITIES = useMemo(() => ['All', ...listCities(places)], [places]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -93,28 +104,28 @@ function Main() {
   }, [visitPlans, plansReady]);
 
   useEffect(() => {
-    let active = true;
-    loadDirectory(process.env.EXPO_PUBLIC_RAMP_DIRECTORY_URL, SAMPLE_PLACES).then(result => {
-      if (!active) return;
-      setPlaces(result.places);
-      setDirectoryMode(result.mode);
-      setDirectoryNotice(result.notice);
-      setDirectoryUpdatedAt(result.updatedAt);
-    }).catch(() => {});
-    return () => { active = false; };
-  }, []);
+    const requestId = ++directoryRequestId.current;
+    loadDirectory(process.env.EXPO_PUBLIC_RAMP_DIRECTORY_URL, SAMPLE_PLACES)
+      .then(result => {
+        if (requestId === directoryRequestId.current) applyDirectory(result);
+      })
+      .catch(() => {});
+    return () => { directoryRequestId.current++; };
+  }, [applyDirectory]);
 
   const refreshDirectory = useCallback(async () => {
     if (refreshing) return;
+    const requestId = ++directoryRequestId.current;
     setRefreshing(true);
     try {
       const result = await loadDirectory(process.env.EXPO_PUBLIC_RAMP_DIRECTORY_URL, SAMPLE_PLACES);
-      setPlaces(result.places);
-      setDirectoryMode(result.mode);
-      setDirectoryNotice(result.notice);
-      setDirectoryUpdatedAt(result.updatedAt);
-    } finally { setRefreshing(false); }
-  }, [refreshing]);
+      if (requestId === directoryRequestId.current) applyDirectory(result);
+    } catch {
+      Alert.alert('Directory refresh failed', 'Please try again later.');
+    } finally {
+      if (requestId === directoryRequestId.current) setRefreshing(false);
+    }
+  }, [applyDirectory, refreshing]);
 
   useEffect(() => {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -164,7 +175,7 @@ function Main() {
             <Text style={s.heart} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{isSaved ? '♥' : '♡'}</Text>
           </Pressable>
         </View>
-        <Text style={s.mini}>{directoryMode === 'live' ? 'RAMP directory record' : 'Public RAMP directory sample'} · {place.certified}</Text>
+        <Text style={s.mini}>{directoryMode === 'live' ? 'Live directory record' : directoryMode === 'stale' ? 'Potentially outdated directory record' : 'Public RAMP directory sample'} · {place.certified}</Text>
         {tab === 'saved' && (
           <Text style={s.topics}>Visit checklist: {visitPlanProgress(visitPlans[place.id] ?? []).complete} of {VISIT_QUESTIONS.length} marked</Text>
         )}
@@ -265,7 +276,7 @@ function Main() {
             {tab === 'discover' && (
               <>
                 <View style={s.sourcePanel}>
-                  <Text style={s.sourceTitle}>Directory: {directoryMode === 'live' ? 'Live connection' : 'Offline prototype'}</Text>
+                  <Text style={s.sourceTitle}>Directory: {directoryMode === 'live' ? 'Live connection' : directoryMode === 'stale' ? 'Connection lost' : 'Offline prototype'}</Text>
                   <Text style={s.note}>{directoryNotice}{directoryUpdatedAt ? ' Last updated: ' + directoryUpdatedAt : ''}</Text>
                   <Action label={refreshing ? 'Refreshing…' : 'Refresh directory'} secondary onPress={() => { void refreshDirectory(); }} />
                 </View>
@@ -349,7 +360,7 @@ function Main() {
                     <Action label="Browse all places" onPress={() => { setTab('discover'); resetFilters(); }} />
                   </View>
                 )}
-                <Text style={s.note}>{directoryMode === 'live' ? 'Configured live directory response.' : 'Preview only: offline sample listings, not the complete RAMP directory.'} {places.length} current visible-source records.</Text>
+                <Text style={s.note}>{directoryMode === 'live' ? 'Live directory response.' : directoryMode === 'stale' ? 'CONNECTION LOST: previously loaded records may now be outdated or withdrawn.' : 'Preview only: offline sample listings, not the complete RAMP directory.'} {places.length} records shown.</Text>
               </>
             )}
             {tab === 'resources' && (
