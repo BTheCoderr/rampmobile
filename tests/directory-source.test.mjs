@@ -93,3 +93,32 @@ test('broken response and network failure return explicitly labeled offline samp
 test('saved ids retain plausible keys across offline, never arbitrary payloads', () => {
   assert.deepEqual(safeStoredFavoriteIds(['sample-record','sample-record','../bad',42]),['sample-record']);
 });
+
+import { reconcileDirectoryRefresh } from '../src/directory-source.ts';
+
+test('a failed refresh retains loaded live records and marks them stale', () => {
+  const live = { places: [{ ...location, id:'live-venue' }], mode:'live', updatedAt:'2026-10-19T18:00:00Z', notice:'live' };
+  const fallback = { places:samples, mode:'fallback', notice:'offline' };
+  const result = reconcileDirectoryRefresh(live, fallback);
+  assert.equal(result.mode,'stale');
+  assert.deepEqual(result.places.map(place => place.id),['live-venue']);
+  assert.match(result.notice,/outdated or withdrawn/);
+  assert.equal(result.updatedAt,live.updatedAt);
+});
+test('successful empty live response deletes previously listed places', () => {
+  const live = { places:[location], mode:'live', notice:'live' };
+  const empty = { places:[], mode:'live', updatedAt:'2026-10-20T12:00:00Z', notice:'updated' };
+  assert.deepEqual(reconcileDirectoryRefresh(live,empty),empty);
+});
+test('stale state stays stale on repeated failures but recovers on success', () => {
+  const stale = { places:[location], mode:'stale', notice:'outdated' };
+  const fallback = { places:samples, mode:'fallback', notice:'offline' };
+  assert.equal(reconcileDirectoryRefresh(stale,fallback).mode,'stale');
+  const recovered = { places:[], mode:'live', notice:'new' };
+  assert.deepEqual(reconcileDirectoryRefresh(stale,recovered),recovered);
+});
+test('ordinary demo and initial failure keep their explicit offline sample', () => {
+  const sample = { places:samples, mode:'sample', notice:'sample' };
+  const fallback = { places:samples, mode:'fallback', notice:'offline' };
+  assert.deepEqual(reconcileDirectoryRefresh(sample,fallback),fallback);
+});
