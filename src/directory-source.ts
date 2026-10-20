@@ -2,7 +2,7 @@ import type { Place, VerifiedCoordinates } from './directory';
 
 export const DIRECTORY_SCHEMA_VERSION = 1;
 export const DEMO_NOTICE = 'Sample public listings only. No live RAMP data connection.';
-export type DirectoryMode = 'sample' | 'live' | 'fallback';
+export type DirectoryMode = 'sample' | 'live' | 'fallback' | 'stale';
 export type DirectoryResult = {
   places: Place[];
   mode: DirectoryMode;
@@ -121,4 +121,25 @@ export async function loadDirectory(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/**
+ * A transient refresh failure must never silently replace a loaded live
+ * directory with the unrelated built-in demonstration data.
+ * The last loaded records are marked STALE and displayed with a warning.
+ * A successful empty live feed is authoritative and removes all listings.
+ */
+export function reconcileDirectoryRefresh(
+  previous: DirectoryResult,
+  incoming: DirectoryResult,
+): DirectoryResult {
+  if (incoming.mode === 'fallback' && (previous.mode === 'live' || previous.mode === 'stale')) {
+    return {
+      places: previous.places,
+      mode: 'stale',
+      updatedAt: previous.updatedAt,
+      notice: 'Connection unavailable. Showing last loaded directory data, which may now be outdated or withdrawn. Confirm directly with the venue.',
+    };
+  }
+  return incoming;
 }
