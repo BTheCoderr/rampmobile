@@ -368,6 +368,9 @@ function Main() {
               <>
                 <Text style={s.pageTitle} accessibilityRole="header">Saved places</Text>
                 <Text style={s.body}>Places you save are stored only on this device.</Text>
+                <Text style={s.note} accessibilityLiveRegion="polite">
+                  {places.filter(place => saved.includes(place.id)).length} saved places · {places.filter(place => saved.includes(place.id) && visitPlanProgress(visitPlans[place.id] ?? []).complete === VISIT_QUESTIONS.length).length} checklists completed
+                </Text>
               </>
             )}
             {tab !== 'resources' && (
