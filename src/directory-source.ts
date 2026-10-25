@@ -47,7 +47,8 @@ function coordinates(raw: unknown): VerifiedCoordinates | undefined {
   if (typeof latitude !== 'number' || !Number.isFinite(latitude) ||
       typeof longitude !== 'number' || !Number.isFinite(longitude) ||
       Math.abs(latitude) > 90 || Math.abs(longitude) > 180 ||
-      !isoDate(verifiedAt) || !httpsUrl(sourceUrl)) {
+      !isoDate(verifiedAt) || Date.parse(verifiedAt) > Date.now() + 5 * 60 * 1000 ||
+      !httpsUrl(sourceUrl)) {
     throw new Error('Invalid verified coordinates');
   }
   return { latitude, longitude, verifiedAt, sourceUrl };
