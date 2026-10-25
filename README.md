@@ -113,3 +113,13 @@ any external trial.
 **Important:** This independent prototype remains offline by default. No personal
 health information should be entered into these generic checklists. RAMP must approve
 the app and an authoritative directory feed before publishing an official version.
+
+## v0.5: privacy controls and honest empty-directory states
+
+- Added per-location checklist reset with an explicit destructive confirmation.
+- Saved tab shows the count of saved places and completed visit checklists.
+- Resources offers a user-confirmed way to clear local saved places and checklist answers; directory records remain untouched.
+- Discover supports clearing the search field and announces the number of matching results for accessibility tools.
+- An authoritative empty live directory now shows a distinct "No published places available" state with refresh instead of telling users to browse sample places. Empty searches and empty favorites use their own explanations.
+- These are repository changes, **not a verified physical-device build**. EAS previews and App Store submission remain outstanding. The mobile directory still defaults to nine offline sample locations and must not be presented as live.
+
