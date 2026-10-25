@@ -387,9 +387,18 @@ function Main() {
                 </View>
                 {visible.length ? visible.map(place => <PlaceCard key={place.id} place={place} />) : (
                   <View style={s.panel}>
-                    <Text style={s.sectionTitle}>{tab === 'saved' ? 'Nothing saved yet' : 'No matches found'}</Text>
-                    <Text style={s.body}>Try exploring all available sample places.</Text>
-                    <Action label="Browse all places" onPress={() => { setTab('discover'); resetFilters(); }} />
+                    <Text style={s.sectionTitle} accessibilityRole="header">{tab === 'saved' ? 'Nothing saved yet' : directoryMode === 'live' && places.length === 0 ? 'No published places available' : 'No matches found'}</Text>
+                    <Text style={s.body}>{tab === 'saved'
+                      ? 'Explore the directory and save a place to plan your next visit.'
+                      : directoryMode === 'live' && places.length === 0
+                        ? 'The current directory source returned no published locations. Sample places will not be substituted for withdrawn or unavailable listings.'
+                        : 'Try changing your search or clearing the filters to see more locations.'}</Text>
+                    {!(tab === 'discover' && directoryMode === 'live' && places.length === 0) && (
+                      <Action label={tab === 'saved' ? 'Explore places' : 'Clear filters'} onPress={() => { setTab('discover'); resetFilters(); }} />
+                    )}
+                    {tab === 'discover' && directoryMode === 'live' && places.length === 0 && (
+                      <Action label={refreshing ? 'Refreshing…' : 'Refresh directory'} secondary onPress={() => { void refreshDirectory(); }} />
+                    )}
                   </View>
                 )}
                 <Text style={s.note}>{directoryMode === 'live' ? 'Live directory response.' : directoryMode === 'stale' ? 'CONNECTION LOST: previously loaded records may now be outdated or withdrawn.' : 'Preview only: offline sample listings, not the complete RAMP directory.'} {places.length} records shown.</Text>
