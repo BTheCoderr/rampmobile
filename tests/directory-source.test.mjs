@@ -47,6 +47,13 @@ test('rejects unsafe source URL and impossible coordinates', () => {
   assert.throws(()=>parseDirectoryResponse(payload([{...location,coordinates:{...verified,latitude:110}}])),/Invalid/);
   assert.throws(()=>parseDirectoryResponse(payload([{...location,coordinates:{...verified,sourceUrl:'http://example.com'}}])),/Invalid/);
 });
+test('rejects coordinate timestamps that claim verification in the future', () => {
+  const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  assert.throws(
+    () => parseDirectoryResponse(payload([{...location, coordinates:{...verified, verifiedAt:future}}])),
+    /Invalid verified coordinates/,
+  );
+});
 test('valid verified coordinates produce map pins while sample data never creates guessed pins', () => {
   const withGeo=parseDirectoryResponse(payload([{...location,coordinates:verified}])).places;
   assert.equal(placesWithVerifiedCoordinates(withGeo).length,1);
