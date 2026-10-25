@@ -242,6 +242,26 @@ function Main() {
               );
             })}
             <Text style={s.note}>Your checklist stays on this device. No login, GPS or health information is required.</Text>
+            {visitPlanProgress(visitPlans[selected.id] ?? []).complete > 0 && (
+              <Action label="Reset this visit checklist" secondary onPress={() => {
+                const placeId = selected.id;
+                Alert.alert(
+                  'Reset checklist?',
+                  'This clears all checked questions for this place on this device. You can check them again at any time.',
+                  [
+                    { text: 'Keep checklist', style: 'cancel' },
+                    { text: 'Reset checklist', style: 'destructive', onPress: () => {
+                      setVisitPlans(current => {
+                        if (!current[placeId]?.length) return current;
+                        const next = { ...current };
+                        delete next[placeId];
+                        return next;
+                      });
+                    } },
+                  ],
+                );
+              }} />
+            )}
             <Action label="Share questions to ask this venue" secondary onPress={() => {
               Share.share({ message: buildVenueQuestionMessage(selected, visitPlans[selected.id] ?? []) })
                 .catch(() => Alert.alert('Unable to share', 'Please try again.'));
