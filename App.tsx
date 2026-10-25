@@ -323,6 +323,9 @@ function Main() {
                   onChangeText={setQuery}
                   style={s.search}
                 />
+                {query.length > 0 && (
+                  <Action label="Clear search" secondary onPress={() => setQuery('')} />
+                )}
                 <Text style={s.label} accessibilityRole="header">Filter by type</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filters}>
                   {CATEGORIES.map(item => (
@@ -359,6 +362,9 @@ function Main() {
                     </Pressable>
                   ))}
                 </ScrollView>
+                <Text style={s.note} accessibilityLiveRegion="polite">
+                  {filtered.length} {filtered.length === 1 ? 'location' : 'locations'} match your current search and filters.
+                </Text>
                 {(query !== '' || category !== 'All' || city !== 'All' || topic !== 'any') && (
                   <Action label="Clear all filters" secondary onPress={resetFilters} />
                 )}
