@@ -156,6 +156,7 @@ function Main() {
   );
   const selected = places.find(place => place.id === selectedId);
   const visible = tab === 'saved' ? places.filter(place => saved.includes(place.id)) : filtered;
+  const hiddenSavedCount = saved.filter(id => !places.some(place => place.id === id)).length;
 
   function PlaceCard({ place }: { place: Place }) {
     const isSaved = saved.includes(place.id);
@@ -374,6 +375,11 @@ function Main() {
               <>
                 <Text style={s.pageTitle} accessibilityRole="header">Saved places</Text>
                 <Text style={s.body}>Places you save are stored only on this device.</Text>
+                {hiddenSavedCount > 0 && (
+                  <Text style={s.note} accessibilityRole="alert">
+                    {hiddenSavedCount} previously saved {hiddenSavedCount === 1 ? 'place is' : 'places are'} currently unavailable in this directory. These saved references remain on your device and will only reappear if published again by an authorized source.
+                  </Text>
+                )}
                 <Text style={s.note} accessibilityLiveRegion="polite">
                   {places.filter(place => saved.includes(place.id)).length} saved places · {places.filter(place => saved.includes(place.id) && visitPlanProgress(visitPlans[place.id] ?? []).complete === VISIT_QUESTIONS.length).length} checklists completed
                 </Text>
