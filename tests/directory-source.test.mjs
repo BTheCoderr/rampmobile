@@ -30,6 +30,10 @@ test('explicitly published records are included, withdrawn ones removed', () => 
   assert.equal(parsed.places.length,1);
   assert.equal(parsed.places[0].id,'sample-record');
 });
+test('rejects future-dated directory updates without showing them as current', () => {
+  const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  assert.throws(() => parseDirectoryResponse({ ...payload([location]), updatedAt: future }), /Future directory update time/);
+});
 test('authoritative empty response remains empty rather than restoring old listings', () => {
   assert.deepEqual(parseDirectoryResponse(payload([])).places,[]);
 });
