@@ -415,6 +415,26 @@ function Main() {
                   <Action label="Open RAMP's official contact form ↗" secondary onPress={() => openExternal(ROOT + '/contact-us/')} />
                 </View>
                 <View style={s.panel}>
+                  <Text style={s.sectionTitle} accessibilityRole="header">Your privacy and device data</Text>
+                  <Text style={s.body}>Saved places, checklist answers and your map display preference are stored on this device. This prototype does not require an account or collect precise location.</Text>
+                  <Action label="Clear my saved places and checklists" secondary onPress={() => {
+                    Alert.alert(
+                      'Clear your device data?',
+                      'This permanently clears all saved places and visit checklist answers on this device. It will not affect RAMP directory listings.',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Clear device data', style: 'destructive', onPress: () => {
+                          setSaved([]);
+                          setVisitPlans({});
+                          // Saving empty collections through existing persistence effects
+                          // removes the user's app data without changing directory content.
+                          Alert.alert('Device data cleared', 'Your saved places and visit checklists have been cleared.');
+                        } },
+                      ],
+                    );
+                  }} />
+                </View>
+                <View style={s.panel}>
                   <Text style={s.sectionTitle} accessibilityRole="header">About RAMP</Text>
                   <Text style={s.body}>Real Access Motivates Progress promotes accessible, inclusive spaces.</Text>
                   <Action label="Visit RAMP Approved ↗" secondary onPress={() => openExternal(ROOT)} />
