@@ -58,6 +58,8 @@ export function parseDirectoryResponse(input: unknown): { places: Place[]; updat
   if (root.schemaVersion !== DIRECTORY_SCHEMA_VERSION) throw new Error('Unsupported directory schema');
   const updatedAt = str(root, 'updatedAt', 48);
   if (!isoDate(updatedAt)) throw new Error('Invalid directory update time');
+  // Reject implausible future timestamps rather than presenting bad data as current.
+  if (Date.parse(updatedAt) > Date.now() + 5 * 60 * 1000) throw new Error('Future directory update time');
   if (!Array.isArray(root.locations) || root.locations.length > 5000) {
     throw new Error('Invalid locations array');
   }
