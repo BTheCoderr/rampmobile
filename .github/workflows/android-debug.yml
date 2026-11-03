@@ -27,11 +27,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Verify runner Android SDK
+      - name: Locate runner Android SDK tools
         run: |
-          echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
-          command -v sdkmanager
-          sdkmanager --version
+          test -d "${ANDROID_HOME:?Missing Android SDK}"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit)"
+          test -n "$SDKMANAGER"
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
+          "$SDKMANAGER" --version
       - name: Install Android build tools
         run: |
           sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
