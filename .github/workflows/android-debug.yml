@@ -27,12 +27,15 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Verify runner Android SDK
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
+          command -v sdkmanager
+          sdkmanager --version
       - name: Install Android build tools
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager --list_installed
       - name: Install JavaScript dependencies
         run: npm install --no-audit --no-fund
       - name: Check tests and TypeScript
